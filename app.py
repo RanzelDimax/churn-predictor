@@ -1,18 +1,38 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+from datetime import datetime
+import os
 
-# Load model, scaler, and feature names
+# --- Logging Function ---
+def log_prediction(input_data: dict, prediction: int, probability: float):
+    log_file = "prediction_logs.csv"
+
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        **input_data,
+        "prediction": prediction,
+        "probability": round(probability, 4)
+    }
+
+    log_df = pd.DataFrame([log_entry])
+
+    if os.path.exists(log_file):
+        log_df.to_csv(log_file, mode='a', header=False, index=False)
+    else:
+        log_df.to_csv(log_file, mode='w', header=True, index=False)
+
+# --- Load trained model and artifacts ---
 model = joblib.load("model.pkl")
 scaler = joblib.load("scaler.pkl")
 feature_names = joblib.load("features.pkl")
 
+# --- Streamlit UI ---
 st.title("🔮 Customer Churn Predictor")
-st.markdown("Enter customer details below to predict if they are likely to churn.")
+st.markdown("Enter customer details below to predict churn.")
 
-# Input fields
+# --- User Inputs ---
 gender = st.selectbox("Gender", ["Female", "Male"])
 senior = st.selectbox("Senior Citizen", [0, 1])
 partner = st.selectbox("Has Partner", ["Yes", "No"])
@@ -35,14 +55,14 @@ payment_method = st.selectbox("Payment Method", [
     "Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"
 ])
 
-# Raw input dictionary
+# --- Construct input dictionary ---
 raw_input = {
     'gender': gender,
     'SeniorCitizen': senior,
     'Partner': partner,
     'Dependents': dependents,
     'tenure': tenure,
-    'PhoneService': "Yes",  # default, to avoid missing in encoding
+    'PhoneService': "Yes",  # default to prevent missing column
     'MultipleLines': multiple_lines,
     'InternetService': internet_service,
     'OnlineSecurity': online_security,
@@ -58,31 +78,30 @@ raw_input = {
     'TotalCharges': total_charges
 }
 
-# Create DataFrame
-input_df = pd.DataFrame([raw_input])
-
-# Perform one-hot encoding to match training
-input_encoded = pd.get_dummies(input_df)
-
-# Add any missing columns from training and set them to 0
-for col in feature_names:
-    if col not in input_encoded.columns:
-        input_encoded[col] = 0
-
-# Ensure column order matches training
-input_encoded = input_encoded[feature_names]
-
-# Scale numeric features
-input_scaled = scaler.transform(input_encoded)
-
-# Predict
+# --- Predict button ---
 if st.button("Predict Churn"):
+    input_df = pd.DataFrame([raw_input])
+
+    # One-hot encode
+    input_encoded = pd.get_dummies(input_df)
+    for col in feature_names:
+        if col not in input_encoded.columns:
+            input_encoded[col] = 0
+    input_encoded = input_encoded[feature_names]
+
+    # Scale
+    input_scaled = scaler.transform(input_encoded)
+
+    # Predict
     prediction = model.predict(input_scaled)[0]
     probability = model.predict_proba(input_scaled)[0][1]
 
+    # Display
     st.markdown("---")
     if prediction == 1:
         st.error(f"⚠️ This customer is likely to **churn**. (Confidence: {probability:.2%})")
     else:
         st.success(f"✅ This customer is likely to **stay**. (Confidence: {1 - probability:.2%})")
 
+    # Log prediction
+    log_prediction(raw_input, int(prediction), float(probability))

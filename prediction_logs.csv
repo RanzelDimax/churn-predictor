@@ -1,0 +1,4 @@
+timestamp,gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges,prediction,probability
+2025-07-06T12:01:48.037057,Female,0,Yes,Yes,12,Yes,Yes,DSL,Yes,Yes,Yes,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,70.0,1000.0,0,0.17
+2025-07-06T12:02:02.779756,Female,0,Yes,Yes,12,Yes,Yes,DSL,Yes,Yes,No,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,70.0,1000.0,0,0.2
+2025-07-06T12:08:19.172175,Male,0,Yes,Yes,12,Yes,Yes,DSL,Yes,Yes,No,Yes,Yes,Yes,Month-to-month,Yes,Electronic check,70.0,1000.0,0,0.2
